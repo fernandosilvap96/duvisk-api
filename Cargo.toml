@@ -1,0 +1,31 @@
+[package]
+name = "rust-contracts"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+selic-contracts = { path = "" }
+alloy = { version = "0.11", features = [
+    "eips",
+    "full",
+    "hyper",
+    "json-rpc",
+    "node-bindings",
+    "rpc-client",
+    "rpc-types-debug",
+    "rpc-types-trace",
+    "signer-aws",
+    "signer-gcp",
+    "signer-keystore",
+    "signer-ledger",
+    "signer-mnemonic",
+    "signer-local"
+] }
+# async
+futures-util = "0.3"
+tokio = {version = "1.42", features = ["macros", "rt-multi-thread"] }
+
+# misc
+eyre = "0.6"
+serde = "1.0"
+serde_json = "1.0"
