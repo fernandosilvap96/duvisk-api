@@ -12,7 +12,7 @@ sol!(
     #[allow(missing_docs)]
     #[sol(rpc)]
     TPFt,
-    "./artifacts/TPFt.json"
+    "lib/selic-contracts/out/TPFt.sol/TPFt.json"
 );
 
 #[tokio::main]

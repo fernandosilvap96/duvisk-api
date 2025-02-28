@@ -1,0 +1,3 @@
+[submodule "lib/selic-contracts"]
+	path = lib/selic-contracts
+	url = https://github.com/fernandosilvap96/selic-contracts.git

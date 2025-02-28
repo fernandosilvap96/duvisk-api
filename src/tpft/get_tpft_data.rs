@@ -10,7 +10,7 @@ sol!(
     #[sol(rpc)]
     #[derive(Debug)]
     TPFt,
-    "./artifacts/TPFt.json"
+    "lib/selic-contracts/out/TPFt.sol/TPFt.json"
 );
 
 #[tokio::main]

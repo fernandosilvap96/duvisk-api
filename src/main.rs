@@ -1,6 +1,3 @@
-pub mod counter {
-    pub mod counter_deploy;
-}
 pub mod tpft {
     pub mod get_tpft_data;
     pub mod tpft_create;
@@ -26,7 +23,6 @@ fn main() {
     //Starting call mods
     // create wallet
     //utils::wallet::create().unwrap();
-    counter::counter_deploy::deploy(&provider).unwrap();
     let tpft_address = tpft::tpft_deploy::deploy(&provider, public_key).unwrap();
     let _ =
         tpft::tpft_create::create(&provider, tpft_address, acronym, code, maturity_date).unwrap();
