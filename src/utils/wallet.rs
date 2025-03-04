@@ -1,7 +1,6 @@
 use alloy::{hex, signers::local::PrivateKeySigner};
 use eyre::Result;
 
-#[tokio::main]
 pub async fn create() -> Result<PrivateKeySigner> {
     let signer = PrivateKeySigner::random();
     let public_key = signer.address();

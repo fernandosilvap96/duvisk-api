@@ -15,7 +15,6 @@ sol!(
     "lib/selic-contracts/out/TPFt.sol/TPFt.json"
 );
 
-#[tokio::main]
 pub async fn create<P: Provider>(
     provider: &P,
     contract_address: Address,

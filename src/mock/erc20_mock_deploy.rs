@@ -8,14 +8,17 @@ use eyre::Result;
 sol!(
     #[allow(missing_docs)]
     #[sol(rpc)]
-    TPFt,
-    "lib/selic-contracts/out/TPFt.sol/TPFt.json"
+    ERC20Mock,
+    "lib/selic-contracts/out/ERC20Mock.sol/ERC20Mock.json"
 );
 
-pub async fn deploy<P: Provider>(provider: &P, public_key: Address) -> Result<Address> {
+pub async fn deploy<P: Provider>(provider: &P) -> Result<Address> {
     // Deploy the `Counter` contract.
-    let contract = TPFt::deploy(&provider, public_key).await?;
-    println!("Deployed TPFt at address: {}", contract.address().clone());
+    let contract = ERC20Mock::deploy(&provider).await?;
+    println!(
+        "Deployed ERC20Mock at address: {}",
+        contract.address().clone()
+    );
 
     Ok(*contract.address())
 }
