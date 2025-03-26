@@ -17,7 +17,7 @@ pub mod mock {
     pub mod erc20_mock_mint;
 }
 pub mod api;
-pub mod postgres {
+pub mod db {
     pub mod db_erc20;
     pub mod db_main;
 }
@@ -27,8 +27,8 @@ pub mod listener {
 }
 
 use actix_web::{App, HttpServer};
+use db::db_main;
 use listener::listener_main;
-use postgres::db_main;
 use reqwest::Client;
 use tokio::task;
 use tokio::time::{sleep, Duration};
