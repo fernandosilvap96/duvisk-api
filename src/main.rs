@@ -21,14 +21,9 @@ pub mod db {
     pub mod db_erc20;
     pub mod db_main;
 }
-pub mod listener {
-    pub mod listener_erc20;
-    pub mod listener_main;
-}
 
 use actix_web::{App, HttpServer};
 use db::db_main;
-use listener::listener_main;
 use reqwest::Client;
 use tokio::task;
 use tokio::time::{sleep, Duration};
@@ -59,11 +54,9 @@ async fn main() -> std::io::Result<()> {
         sleep(Duration::from_secs(1)).await;
     }
     // conectar o banco de dados
-    let db_client = db_main::conectar()
+    let _db_client = db_main::conectar()
         .await
         .expect("Erro ao conectar ao banco de dados");
-    // iniciar o listener
-    let _ = listener_main::start_listener(db_client).await;
 
     // Aguarda o servidor rodar indefinidamente
     server_handle.await??;
