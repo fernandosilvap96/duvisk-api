@@ -1,8 +1,8 @@
 [package]
-name = "rust-contracts"
+name = "duvisk-api"
 version = "0.1.0"
 edition = "2021"
-
+s
 [dependencies]
 alloy = { version = "0.11", features = [
     "eips",

@@ -1,7 +1,7 @@
 use tokio_postgres::{Client, Error, NoTls};
 
 pub async fn conectar() -> Result<Client, Error> {
-    let conn_str = "host=localhost user=fernando password=silva dbname=blockchain";
+    let conn_str = "host=localhost user=fernando password=silva dbname=rust_database";
     let (client, connection) = match tokio_postgres::connect(conn_str, NoTls).await {
         Ok(conn) => conn,
         Err(e) => {
