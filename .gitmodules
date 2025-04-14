@@ -1,3 +1,6 @@
 [submodule "lib/selic-contracts"]
 	path = lib/selic-contracts
 	url = https://github.com/fernandosilvap96/selic-contracts.git
+[submodule "lib/uniswap-v4"]
+	path = lib/uniswap-v4
+	url = https://github.com/Uniswap/v4-core.git

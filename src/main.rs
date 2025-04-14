@@ -1,29 +1,22 @@
-pub mod tpft {
-    pub mod get_tpft_data;
-    pub mod tpft_create;
-    pub mod tpft_deploy;
-    pub mod tpft_mint;
-}
 pub mod utils {
     pub mod math;
     pub mod wallet;
-}
-pub mod pool {
-    pub mod pool_manager_deploy;
-    pub mod pool_manager_initialize;
 }
 pub mod mock {
     pub mod erc20_mock_deploy;
     pub mod erc20_mock_mint;
 }
-pub mod api;
-pub mod db {
-    pub mod db_erc20;
-    pub mod db_main;
+pub mod chain {
+    pub mod chain_data;
+}
+pub mod uniswap_v4 {
+    pub mod pool_manager;
 }
 
+pub mod api;
+pub mod provider;
+
 use actix_web::{App, HttpServer};
-use db::db_main;
 use reqwest::Client;
 use tokio::task;
 use tokio::time::{sleep, Duration};
@@ -53,11 +46,6 @@ async fn main() -> std::io::Result<()> {
         println!("Aguardando a API... Tentando novamente...");
         sleep(Duration::from_secs(1)).await;
     }
-    // conectar o banco de dados
-    let _db_client = db_main::conectar()
-        .await
-        .expect("Erro ao conectar ao banco de dados");
-
     // Aguarda o servidor rodar indefinidamente
     server_handle.await??;
 

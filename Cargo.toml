@@ -30,5 +30,7 @@ tokio-postgres = "0.7"
 eyre = "0.6"
 serde = "1.0"
 serde_json = "1.0"
+# api
 actix-web = "4.9.0"
 reqwest = "0.12.12"
+# frontend

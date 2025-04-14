@@ -1,26 +1,19 @@
-use std::str::FromStr;
-
+use crate::chain;
 use crate::mock;
-//use crate::tpft;
+use crate::provider::{init_arbitrum_provider, init_local_provider};
+use crate::uniswap_v4;
 use actix_web::{
     web::{self, Path},
     HttpResponse, Responder,
 };
-use alloy::{
-    core::primitives::Address,
-    network::EthereumWallet,
-    providers::{ProviderBuilder, WalletProvider},
-    signers::local::PrivateKeySigner,
-};
+use alloy::core::primitives::Address;
+use alloy::providers::WalletProvider;
+use std::str::FromStr;
+
 // use alloy_zksync::{provider::zksync_provider, wallet::ZksyncWallet};
-use reqwest;
 
 async fn deploy_erc20_mock() -> impl Responder {
-    let url = reqwest::Url::parse("http://127.0.0.1:8545").expect("Invalid URL");
-    let private_key = "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"; // Substitua pela sua chave privada
-    let signer = PrivateKeySigner::from_str(private_key).expect("Invalid private key");
-    let wallet = EthereumWallet::from(signer.clone());
-    let provider = ProviderBuilder::new().wallet(wallet).on_http(url);
+    let provider = init_local_provider();
     //println!("Provider: {:?}", provider);
     match mock::erc20_mock_deploy::deploy(&provider).await {
         Ok(erc20_address) => {
@@ -33,11 +26,7 @@ async fn deploy_erc20_mock() -> impl Responder {
 }
 
 async fn mint_erc20_mock(contract_address: Path<String>) -> impl Responder {
-    let url = reqwest::Url::parse("http://127.0.0.1:8545").expect("Invalid URL");
-    let private_key = "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"; // Substitua pela sua chave privada
-    let signer = PrivateKeySigner::from_str(private_key).expect("Invalid private key");
-    let wallet = EthereumWallet::from(signer.clone());
-    let provider = ProviderBuilder::new().wallet(wallet).on_http(url);
+    let provider = init_local_provider();
     let erc20_address = match Address::from_str(&contract_address.into_inner()) {
         Ok(addr) => addr,
         Err(_) => return HttpResponse::BadRequest().json("Invalid contract address format"),
@@ -56,6 +45,51 @@ async fn mint_erc20_mock(contract_address: Path<String>) -> impl Responder {
     }
 }
 
+async fn chain_status() -> impl Responder {
+    let provider = init_arbitrum_provider();
+
+    #[derive(serde::Serialize)]
+    struct ChainStatus {
+        block_number: u64,
+        chain_id: u64,
+    }
+
+    let mut chain_status = ChainStatus {
+        block_number: 0,
+        chain_id: 0,
+    };
+    let _root_provider = chain::chain_data::get_root_provider(&provider).await;
+
+    match chain::chain_data::get_block_number(&provider).await {
+        Ok(block_number) => chain_status.block_number = block_number,
+        Err(e) => {
+            println!("Failed to get block number: {}", e);
+        }
+    }
+    match chain::chain_data::get_chain_id(&provider).await {
+        Ok(chain_id) => chain_status.chain_id = chain_id,
+        Err(e) => {
+            println!("Failed to get chain ID: {}", e);
+        }
+    }
+    if chain_status.block_number > 0 && chain_status.chain_id > 0 {
+        return HttpResponse::Ok().json(chain_status);
+    } else {
+        return HttpResponse::InternalServerError().json("Failed to get chain status");
+    }
+}
+
+async fn pool_manager_data() -> impl Responder {
+    let provider = init_arbitrum_provider();
+    let pool_manager_address = "0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32"
+        .parse::<Address>()
+        .unwrap();
+
+    match uniswap_v4::pool_manager::get_owner(&provider, pool_manager_address).await {
+        Ok(owner) => HttpResponse::Ok().json(format!("Onwer: {:?}", owner)),
+        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get owner: {}", e)),
+    }
+}
 // async fn mint_erc20_zk_mock() -> impl Responder {
 //     let l2_url = reqwest::Url::parse("http://127.0.0.1:3050").expect("Invalid URL");
 //     let private_key = "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"; // Substitua pela sua chave privada
@@ -96,6 +130,8 @@ pub fn init(cfg: &mut web::ServiceConfig) {
                 "/mint_erc20_mock/{contract_address}",
                 web::get().to(mint_erc20_mock),
             )
-            .route("/test_routes", web::get().to(deploy_erc20_mock)),
+            .route("/test_routes", web::get().to(deploy_erc20_mock))
+            .route("/chain_status", web::get().to(chain_status))
+            .route("/pool_manager_data", web::get().to(pool_manager_data)),
     );
 }
