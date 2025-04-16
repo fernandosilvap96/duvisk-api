@@ -47,19 +47,16 @@ async fn mint_erc20_mock(contract_address: Path<String>) -> impl Responder {
 
 async fn chain_status() -> impl Responder {
     let provider = init_arbitrum_provider();
-
     #[derive(serde::Serialize)]
     struct ChainStatus {
         block_number: u64,
         chain_id: u64,
     }
-
     let mut chain_status = ChainStatus {
         block_number: 0,
         chain_id: 0,
     };
     let _root_provider = chain::chain_data::get_root_provider(&provider).await;
-
     match chain::chain_data::get_block_number(&provider).await {
         Ok(block_number) => chain_status.block_number = block_number,
         Err(e) => {
@@ -73,6 +70,7 @@ async fn chain_status() -> impl Responder {
         }
     }
     if chain_status.block_number > 0 && chain_status.chain_id > 0 {
+        let _block = chain::chain_data::get_block(&provider, chain_status.block_number).await;
         return HttpResponse::Ok().json(chain_status);
     } else {
         return HttpResponse::InternalServerError().json("Failed to get chain status");
@@ -85,7 +83,7 @@ async fn pool_manager_data() -> impl Responder {
         .parse::<Address>()
         .unwrap();
 
-    match uniswap_v4::pool_manager::get_owner(&provider, pool_manager_address).await {
+    match uniswap_v4::uniswap_v4_pool_manager::get_owner(&provider, pool_manager_address).await {
         Ok(owner) => HttpResponse::Ok().json(format!("Onwer: {:?}", owner)),
         Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get owner: {}", e)),
     }
@@ -120,6 +118,34 @@ async fn health_check() -> impl Responder {
     HttpResponse::Ok().body("API está funcionando!")
 }
 
+async fn test_subgraph() -> impl Responder {
+    match uniswap_v4::uniswap_v4_subgraph::fetch_pool_managers().await {
+        Ok(res) => println!("Fetched {:?}: ", res),
+        Err(e) => {
+            println!("Failed to fetch: {}", e);
+        }
+    }
+    match uniswap_v4::uniswap_v4_subgraph::fetch_tokens().await {
+        Ok(res) => println!("Fetched {:?}: ", res),
+        Err(e) => {
+            println!("Failed to fetch: {}", e);
+        }
+    }
+    match uniswap_v4::uniswap_v4_subgraph::fetch_pools().await {
+        Ok(res) => println!("Fetched {:?}: ", res),
+        Err(e) => {
+            println!("Failed to fetch: {}", e);
+        }
+    }
+    match uniswap_v4::uniswap_v4_subgraph::fetch_bundles().await {
+        Ok(res) => println!("Fetched {:?}: ", res),
+        Err(e) => {
+            println!("Failed to fetch: {}", e);
+        }
+    }
+    HttpResponse::Ok().body("Subgraph data fetched successfully!")
+}
+
 pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(web::resource("/api/health_check").to(health_check));
     cfg.service(
@@ -132,6 +158,7 @@ pub fn init(cfg: &mut web::ServiceConfig) {
             )
             .route("/test_routes", web::get().to(deploy_erc20_mock))
             .route("/chain_status", web::get().to(chain_status))
-            .route("/pool_manager_data", web::get().to(pool_manager_data)),
+            .route("/pool_manager_data", web::get().to(pool_manager_data))
+            .route("/test_subgraph", web::get().to(test_subgraph)),
     );
 }

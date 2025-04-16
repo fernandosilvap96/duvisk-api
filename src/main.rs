@@ -10,7 +10,14 @@ pub mod chain {
     pub mod chain_data;
 }
 pub mod uniswap_v4 {
-    pub mod pool_manager;
+    pub mod uniswap_v4_pool_manager;
+    pub mod uniswap_v4_subgraph;
+    pub mod uniswap_v4_subgraph_entities;
+}
+
+pub mod subgraph {
+    pub mod subgraph;
+    pub mod subgraph_entities;
 }
 
 pub mod api;
