@@ -2,10 +2,6 @@ pub mod utils {
     pub mod math;
     pub mod wallet;
 }
-pub mod mock {
-    pub mod erc20_mock_deploy;
-    pub mod erc20_mock_mint;
-}
 pub mod chain {
     pub mod chain_data;
 }

@@ -1,49 +1,19 @@
 use crate::chain;
-use crate::mock;
-use crate::provider::{init_arbitrum_provider, init_local_provider};
-use crate::uniswap_v4;
+// use crate::mock;
+use crate::provider::init_arbitrum_provider;
+use crate::uniswap_v4::{
+    uniswap_v4_subgraph,
+    uniswap_v4_subgraph_entities::{
+        BundleData, PoolData, PoolDayDataCollection, PoolManagerData, SwapData, TickData,
+        TokenData, TokenDayDataCollection, TransactionData,
+    },
+};
 use actix_web::{
-    web::{self, Path},
+    web::{self},
     HttpResponse, Responder,
 };
-use alloy::core::primitives::Address;
-use alloy::providers::WalletProvider;
-use std::str::FromStr;
-
+// use alloy::core::primitives::Address;
 // use alloy_zksync::{provider::zksync_provider, wallet::ZksyncWallet};
-
-async fn deploy_erc20_mock() -> impl Responder {
-    let provider = init_local_provider();
-    //println!("Provider: {:?}", provider);
-    match mock::erc20_mock_deploy::deploy(&provider).await {
-        Ok(erc20_address) => {
-            HttpResponse::Ok().json(format!("ERC20 deployed at address: {}", erc20_address))
-        }
-        Err(e) => {
-            HttpResponse::InternalServerError().json(format!("Failed to deploy ERC20: {}", e))
-        }
-    }
-}
-
-async fn mint_erc20_mock(contract_address: Path<String>) -> impl Responder {
-    let provider = init_local_provider();
-    let erc20_address = match Address::from_str(&contract_address.into_inner()) {
-        Ok(addr) => addr,
-        Err(_) => return HttpResponse::BadRequest().json("Invalid contract address format"),
-    };
-    //println!("Provider: {:?}", provider);
-    match mock::erc20_mock_mint::mint(
-        &provider,
-        erc20_address,
-        provider.default_signer_address(),
-        1000,
-    )
-    .await
-    {
-        Ok(receipt) => HttpResponse::Ok().json(format!("Receipt: {:?}", receipt)),
-        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to mint ERC20: {}", e)),
-    }
-}
 
 async fn chain_status() -> impl Responder {
     let provider = init_arbitrum_provider();
@@ -77,36 +47,15 @@ async fn chain_status() -> impl Responder {
     }
 }
 
-async fn pool_manager_data() -> impl Responder {
-    let provider = init_arbitrum_provider();
-    let pool_manager_address = "0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32"
-        .parse::<Address>()
-        .unwrap();
+// async fn pool_manager_data() -> impl Responder {
+//     let provider = init_arbitrum_provider();
+//     let pool_manager_address = "0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32"
+//         .parse::<Address>()
+//         .unwrap();
 
-    match uniswap_v4::uniswap_v4_pool_manager::get_owner(&provider, pool_manager_address).await {
-        Ok(owner) => HttpResponse::Ok().json(format!("Onwer: {:?}", owner)),
-        Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get owner: {}", e)),
-    }
-}
-// async fn mint_erc20_zk_mock() -> impl Responder {
-//     let l2_url = reqwest::Url::parse("http://127.0.0.1:3050").expect("Invalid URL");
-//     let private_key = "8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63"; // Substitua pela sua chave privada
-//     let signer = PrivateKeySigner::from_str(private_key).expect("Invalid private key");
-//     let zk_wallet: ZksyncWallet = ZksyncWallet::from(signer.clone());
-//     let zk_provider = zksync_provider().wallet(zk_wallet).on_http(l2_url);
-//     let erc20_address =
-//         Address::from_str("0x42699A7612A82f1d9C36148af9C77354759b210b").expect("Invalid address");
-//     //println!("Provider: {:?}", provider);
-//     match mock::erc20_mock_mint::mint_zk(
-//         &zk_provider,
-//         erc20_address,
-//         zk_provider.default_signer_address(),
-//         1000,
-//     )
-//     .await
-//     {
-//         Ok(receipt) => HttpResponse::Ok().json(format!("Receipt: {:?}", receipt)),
-//         Err(e) => HttpResponse::InternalServerError().json(format!("Failed to mint ERC20: {}", e)),
+//     match uniswap_v4_pool_manager::get_owner(&provider, pool_manager_address).await {
+//         Ok(owner) => HttpResponse::Ok().json(format!("Onwer: {:?}", owner)),
+//         Err(e) => HttpResponse::InternalServerError().json(format!("Failed to get owner: {}", e)),
 //     }
 // }
 
@@ -118,32 +67,86 @@ async fn health_check() -> impl Responder {
     HttpResponse::Ok().body("API está funcionando!")
 }
 
-async fn test_subgraph() -> impl Responder {
-    match uniswap_v4::uniswap_v4_subgraph::fetch_pool_managers().await {
-        Ok(res) => println!("Fetched {:?}: ", res),
+async fn metrics_uniswap_v4() -> impl Responder {
+    #[derive(serde::Serialize)]
+    struct Metrics {
+        pool_managers: PoolManagerData,
+        tokens: TokenData,
+        pools: PoolData,
+        bundles: BundleData,
+        swaps: SwapData,
+        ticks: TickData,
+        transactions: TransactionData,
+        pool_day_data: PoolDayDataCollection,
+        token_day_data: TokenDayDataCollection,
+    }
+    let mut metrics = Metrics {
+        pool_managers: PoolManagerData::default(),
+        tokens: TokenData::default(),
+        pools: PoolData::default(),
+        bundles: BundleData::default(),
+        swaps: SwapData::default(),
+        ticks: TickData::default(),
+        transactions: TransactionData::default(),
+        pool_day_data: PoolDayDataCollection::default(),
+        token_day_data: TokenDayDataCollection::default(),
+    };
+    match uniswap_v4_subgraph::fetch_pool_managers().await {
+        Ok(res) => metrics.pool_managers = res,
         Err(e) => {
             println!("Failed to fetch: {}", e);
         }
     }
-    match uniswap_v4::uniswap_v4_subgraph::fetch_tokens().await {
-        Ok(res) => println!("Fetched {:?}: ", res),
+    match uniswap_v4_subgraph::fetch_tokens().await {
+        Ok(res) => metrics.tokens = res,
         Err(e) => {
             println!("Failed to fetch: {}", e);
         }
     }
-    match uniswap_v4::uniswap_v4_subgraph::fetch_pools().await {
-        Ok(res) => println!("Fetched {:?}: ", res),
+    match uniswap_v4_subgraph::fetch_pools().await {
+        Ok(res) => metrics.pools = res,
         Err(e) => {
             println!("Failed to fetch: {}", e);
         }
     }
-    match uniswap_v4::uniswap_v4_subgraph::fetch_bundles().await {
-        Ok(res) => println!("Fetched {:?}: ", res),
+    match uniswap_v4_subgraph::fetch_bundles().await {
+        Ok(res) => metrics.bundles = res,
         Err(e) => {
             println!("Failed to fetch: {}", e);
         }
     }
-    HttpResponse::Ok().body("Subgraph data fetched successfully!")
+    match uniswap_v4_subgraph::fetch_swaps().await {
+        Ok(res) => metrics.swaps = res,
+        Err(e) => {
+            println!("Failed to fetch: {}", e);
+        }
+    }
+    match uniswap_v4_subgraph::fetch_ticks().await {
+        Ok(res) => metrics.ticks = res,
+        Err(e) => {
+            println!("Failed to fetch: {}", e);
+        }
+    }
+    match uniswap_v4_subgraph::fetch_transactions().await {
+        Ok(res) => metrics.transactions = res,
+        Err(e) => {
+            println!("Failed to fetch: {}", e);
+        }
+    }
+    match uniswap_v4_subgraph::fetch_pool_day_data().await {
+        Ok(res) => metrics.pool_day_data = res,
+        Err(e) => {
+            println!("Failed to fetch: {}", e);
+        }
+    }
+    match uniswap_v4_subgraph::fetch_token_day_data().await {
+        Ok(res) => metrics.token_day_data = res,
+        Err(e) => {
+            println!("Failed to fetch: {}", e);
+        }
+    }
+    let response = serde_json::to_string(&metrics).unwrap();
+    HttpResponse::Ok().body(response)
 }
 
 pub fn init(cfg: &mut web::ServiceConfig) {
@@ -151,14 +154,8 @@ pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/api")
             .route("", web::get().to(api_warning))
-            .route("/deploy_erc20_mock", web::get().to(deploy_erc20_mock))
-            .route(
-                "/mint_erc20_mock/{contract_address}",
-                web::get().to(mint_erc20_mock),
-            )
-            .route("/test_routes", web::get().to(deploy_erc20_mock))
             .route("/chain_status", web::get().to(chain_status))
-            .route("/pool_manager_data", web::get().to(pool_manager_data))
-            .route("/test_subgraph", web::get().to(test_subgraph)),
+            // .route("/pool_manager_data", web::get().to(pool_manager_data))
+            .route("/metrics/uniswap-v4", web::get().to(metrics_uniswap_v4)),
     );
 }

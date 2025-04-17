@@ -39,7 +39,7 @@ async fn fetch_from_subgraph<T: DeserializeOwned>(query: &str) -> Result<T> {
     }
 }
 
-pub async fn fetch_pool_managers() -> Result<()> {
+pub async fn fetch_pool_managers() -> Result<PoolManagerData> {
     let query = r#"
     {
         poolManagers(first: 5) {
@@ -60,16 +60,122 @@ pub async fn fetch_pool_managers() -> Result<()> {
     }"#;
 
     let data: PoolManagerData = fetch_from_subgraph(query).await?;
-    for pm in data.pool_managers {
-        println!(
-            "PoolManager: {} | Total Volume USD: {}",
-            pm.id, pm.total_volume_usd
-        );
-    }
-    Ok(())
+    // for pm in &data.pool_managers {
+    //     println!(
+    //         "PoolManager: {} | Total Volume USD: {}",
+    //         pm.id, pm.total_volume_usd
+    //     );
+    // }
+    Ok(data)
 }
 
-pub async fn fetch_tokens() -> Result<()> {
+pub async fn fetch_ticks() -> Result<TickData> {
+    let query = r#"
+    {
+        ticks(first: 5) {
+            id
+            poolAddress
+            tickIdx
+            liquidityGross
+            liquidityNet
+            price0
+            price1
+            createdAtTimestamp
+            createdAtBlockNumber
+        }
+    }"#;
+
+    let data: TickData = fetch_from_subgraph(query).await?;
+    Ok(data)
+}
+
+pub async fn fetch_swaps() -> Result<SwapData> {
+    let query = r#"
+    {
+        swaps(first: 5) {
+            id
+            timestamp
+            amount0
+            amount1
+            amountUSD
+            sqrtPriceX96
+            tick
+        }
+    }"#;
+
+    let data: SwapData = fetch_from_subgraph(query).await?;
+    Ok(data)
+}
+
+pub async fn fetch_transactions() -> Result<TransactionData> {
+    let query = r#"
+    {
+        transactions(first: 5) {
+            id
+            blockNumber
+            timestamp
+            gasUsed
+            gasPrice
+        }
+    }"#;
+
+    let data: TransactionData = fetch_from_subgraph(query).await?;
+    Ok(data)
+}
+
+pub async fn fetch_pool_day_data() -> Result<PoolDayDataCollection> {
+    let query = r#"
+    {
+        poolDayDatas(first: 5) {
+            id
+            date
+            liquidity
+            sqrtPrice
+            token0Price
+            token1Price
+            tick
+            tvlUSD
+            volumeToken0
+            volumeToken1
+            volumeUSD
+            feesUSD
+            txCount
+            open
+            high
+            low
+            close
+        }
+    }"#;
+
+    let data: PoolDayDataCollection = fetch_from_subgraph(query).await?;
+    Ok(data)
+}
+
+pub async fn fetch_token_day_data() -> Result<TokenDayDataCollection> {
+    let query = r#"
+    {
+        tokenDayDatas(first: 5) {
+            id
+            date
+            volume
+            volumeUSD
+            untrackedVolumeUSD
+            totalValueLocked
+            totalValueLockedUSD
+            priceUSD
+            feesUSD
+            open
+            high
+            low
+            close
+        }
+    }"#;
+
+    let data: TokenDayDataCollection = fetch_from_subgraph(query).await?;
+    Ok(data)
+}
+
+pub async fn fetch_tokens() -> Result<TokenData> {
     let query = r#"
     {
         tokens(first: 5) {
@@ -92,13 +198,13 @@ pub async fn fetch_tokens() -> Result<()> {
     }"#;
 
     let data: TokenData = fetch_from_subgraph(query).await?;
-    for token in data.tokens {
-        println!("Token: {} | Volume USD: {}", token.symbol, token.volume);
-    }
-    Ok(())
+    // for token in &data.tokens {
+    //     println!("Token: {} | Volume USD: {}", token.symbol, token.volume);
+    // }
+    Ok(data)
 }
 
-pub async fn fetch_pools() -> Result<()> {
+pub async fn fetch_pools() -> Result<PoolData> {
     let query = r#"
     {
         pools(first: 5) {
@@ -135,16 +241,16 @@ pub async fn fetch_pools() -> Result<()> {
     }"#;
 
     let data: PoolData = fetch_from_subgraph(query).await?;
-    for pool in data.pools {
-        println!(
-            "Pool: {} | {}-{} | Liquidity: {}",
-            pool.id, pool.token0.symbol, pool.token1.symbol, pool.liquidity
-        );
-    }
-    Ok(())
+    // for pool in &data.pools {
+    //     println!(
+    //         "Pool: {} | {}-{} | Liquidity: {}",
+    //         pool.id, pool.token0.symbol, pool.token1.symbol, pool.liquidity
+    //     );
+    // }
+    Ok(data)
 }
 
-pub async fn fetch_bundles() -> Result<()> {
+pub async fn fetch_bundles() -> Result<BundleData> {
     let query = r#"
     {
         bundles(first: 1) {
@@ -154,8 +260,8 @@ pub async fn fetch_bundles() -> Result<()> {
     }"#;
 
     let data: BundleData = fetch_from_subgraph(query).await?;
-    for bundle in data.bundles {
-        println!("ETH Price USD: {}", bundle.eth_price_usd);
-    }
-    Ok(())
+    // for bundle in &data.bundles {
+    //     println!("ETH Price USD: {}", bundle.eth_price_usd);
+    // }
+    Ok(data)
 }

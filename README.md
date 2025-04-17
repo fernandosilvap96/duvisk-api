@@ -3,6 +3,7 @@ http://localhost:7555/api/mint_erc20_mock/0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed
 http://localhost:7555/api/block_number
 http://localhost:7555/api/chain_status
 http://localhost:7555/api/test_subgraph
+http://localhost:7555/api/metrics/uniswap-v4
 
 graph url:
 https://api.studio.thegraph.com/query/109194/pool-manager/v0.0.1
